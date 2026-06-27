@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🍁メイプルチャレ鯖パートナー募集カードメーカー🍁</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            max-width: 900px;
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        @media (max-width: 768px) {
+            .container { grid-template-columns: 1fr; }
+        }
+        .form-side {
+            max-height: 550px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        textarea { height: 80px; resize: none; }
+        .preview-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+        }
+        canvas {
+            max-width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .btn-download {
+            margin-top: 15px;
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+        }
+        .btn-download:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+
+    <h2>自己紹介画像ジェネレーター</h2>
+
+    <div class="container">
+        <!-- 入力エリア -->
+        <div class="input-form form-side">
+            <div class="form-group">
+                <label for="bgTheme">背景テーマ</label>
+                <select id="bgTheme">
+                    <option value="cool">ヘネシス</option>
+                    <option value="aqua">アーケインリバー</option>
+                    <option value="pink">ピンクビーン</option>
+                    <option value="kinesis">キネシス</option>
+                    <option value="kai">カイ</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="name">メインプレイヤー名</label>
+                <input type="text" id="name" value="RUXEL">
+            </div>
+            <div class="form-group">
+                <label for="snsId">SNS ID (ディスコード、Xなど)</label>
+                <input type="text" id="snsId" value="X: @RUX_maple">
+            </div>
+            <div class="form-group">
+                <label for="server">メインサーバー</label>
+                <input type="text" id="server" value="かえで">
+            </div>
+            <div class="form-group">
+                <label for="history">メイプル歴</label>
+                <input type="text" id="history" value="20年（復帰勢）">
+            </div>
+            <div class="form-group">
+                <label for="job">作成予定職業</label>
+                <input type="text" id="job" value="アラン/キネシス ">
+            </div>
+            <div class="form-group">
+                <label for="style">プレイスタイル</label>
+                <input type="text" id="style" value="まったりソロ時々ボスグループ">
+            </div>
+            <div class="form-group">
+                <label for="level">目標レベル</label>
+                <input type="text" id="level" value="285レベル！">
+            </div>
+            <div class="form-group">
+                <label for="boss">目標討伐ボス</label>
+                <input type="text" id="boss" value="ハードセレン">
+            </div>
+            <div class="form-group">
+                <label for="vip">VIP等級</label>
+                <input type="text" id="vip" value="ダイヤ">
+            </div>
+            <div class="form-group">
+                <label for="login">週ログイン数</label>
+                <input type="text" id="login" value="週5日（21時〜24時頃）">
+            </div>
+            <div class="form-group">
+                <label for="pass">パスの購入予定</label>
+                <input type="text" id="pass" value="キノコ・ジェネシス">
+            </div>
+            <div class="form-group">
+                <label for="comment">一言</label>
+                <textarea id="comment">友達募集中です！気軽に声をかけてください🍁</textarea>
+            </div>
+        </div>
+
+        <!-- プレビュー＆出力エリア -->
+        <div class="preview-area">
+            <label>画像プレビュー</label>
+            <canvas id="profileCanvas" width="600" height="420"></canvas>
+            <button class="btn-download" id="downloadBtn">画像をダウンロード</button>
+        </div>
+    </div>
+<footer>
+    <p>Made With <a href="https://x.com/RUX_maple">RUXEL</a></p>
+  </footer>
+
+    <script>
+        const canvas = document.getElementById('profileCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const fields = ['name', 'snsId', 'server', 'history', 'job', 'style', 'level', 'boss', 'vip', 'login', 'pass', 'comment', 'bgTheme'];
+        fields.forEach(id => {
+            document.getElementById(id).addEventListener('input', drawCanvas);
+        });
+
+        function drawCanvas() {
+            const name = document.getElementById('name').value;
+            const snsId = document.getElementById('snsId').value;
+            const server = document.getElementById('server').value;
+            const history = document.getElementById('history').value;
+            const job = document.getElementById('job').value;
+            const style = document.getElementById('style').value;
+            const level = document.getElementById('level').value;
+            const boss = document.getElementById('boss').value;
+            const vip = document.getElementById('vip').value;
+            const login = document.getElementById('login').value;
+            const pass = document.getElementById('pass').value;
+            const comment = document.getElementById('comment').value;
+            const theme = document.getElementById('bgTheme').value;
+
+            // 1. 背景の描画
+            let gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            if (theme === 'cool') {
+                gradient.addColorStop(0, '#ffecd2'); 
+                gradient.addColorStop(1, '#fcb69f');
+            } else if (theme === 'aqua') {
+                gradient.addColorStop(0, '#3B55AF'); 
+                gradient.addColorStop(1, '#2c3e50');
+            } else if (theme === 'pink') {
+                gradient.addColorStop(0, '#ffdeeb'); 
+                gradient.addColorStop(1, '#ebd0f7');
+            } else if (theme === 'kinesis') {
+                gradient.addColorStop(0, '#ffffff'); 
+                gradient.addColorStop(1, '#000000');
+
+            } else {
+                gradient.addColorStop(0, '#00FF00'); 
+                gradient.addColorStop(1, '#FF00FF');
+            }
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 背景の飾り文字
+            ctx.fillStyle = 'rgba(255,255,255,0.06)';
+            ctx.font = 'italic bold 55px sans-serif';
+            ctx.fillText('MAPLE', 380, 95);
+
+            // 文字用レイヤーの共通シャドウ設定
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+            ctx.shadowBlur = 5;
+            ctx.shadowOffsetX = 1.5;
+            ctx.shadowOffsetY = 1.5;
+
+            // 最上部：画像タイトル
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.35)'; 
+            ctx.fillRect(35, 15, 530, 40);
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 16px sans-serif';
+            ctx.fillText('🍁 メイプルチャレ鯖パートナー募集カード', 50, 41);
+
+            // 2. 名前エリアの半透明座布団
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.32)'; 
+            ctx.fillRect(35, 70, 530, 55); 
+
+            // メインプレイヤー名
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 28px sans-serif';
+            ctx.fillText(name, 50, 110);
+
+            // SNS IDの横並び配置
+            const nameWidth = ctx.measureText(name).width; 
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'; 
+            ctx.font = 'bold 14px sans-serif';
+            ctx.fillText(snsId, 50 + nameWidth + 20, 106); 
+
+            // 中央の仕切りアンダーライン
+            ctx.fillStyle = 'rgba(255,255,255,0.3)';
+            ctx.fillRect(40, 145, 520, 2);
+
+            // 3. メインの項目エリア（2列配置）
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.25)'; 
+            ctx.fillRect(35, 160, 530, 175); 
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 14px sans-serif';
+
+            // 左列
+            ctx.fillText('【サーバー】 ' + server, 45, 190);
+            ctx.fillText('【歴】 ' + history, 45, 225);
+            ctx.fillText('【予定職業】 ' + job, 45, 260);
+            ctx.fillText('【スタイル】 ' + style, 45, 295);
+            ctx.fillText('【パス購入】 ' + pass, 45, 325); 
+
+            // 右列
+            ctx.fillText('【目標Lv】 ' + level, 320, 190);
+            ctx.fillText('【目標ボス】 ' + boss, 320, 225);
+            ctx.fillText('【VIP等級】 ' + vip, 320, 260);
+            ctx.fillText('【週ログイン】 ' + login, 320, 295);
+
+            // 4. 最下段（一言メッセージ専用）
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+            ctx.fillRect(35, 345, 530, 50); 
+
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText('【一言】 ' + comment, 45, 376);
+        }
+
+        document.getElementById('downloadBtn').addEventListener('click', () => {
+            const link = document.createElement('a');
+            link.download = 'maple_profile.png'; 
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        });
+
+        drawCanvas();
+    </script>
+</body>
+</html>
